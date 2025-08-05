@@ -1,0 +1,275 @@
+<!-- wallet/home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Wallet</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.min.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome, {{ request.user.username }}</h1>
+    <p class="text-gray-600">Here's your wallet summary</p>
+  </div>
+
+  <!-- Wallet Card -->
+  <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+      <label class="text-sm font-medium text-gray-600 mb-1 block">Wallet Number</label>
+      <div class="flex items-center space-x-2">
+        <span class="font-mono text-sm text-gray-800" id="walletId">{{ wallet.wallet_number }}</span>
+        <button onclick="copyWalletId()" class="text-blue-500 hover:text-blue-700 transition-colors">
+          <i data-feather="copy" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-700">Account Balance</h2>
+        <button onclick="toggleBalance()" class="text-gray-500 hover:text-gray-700 transition-colors">
+          <i data-feather="eye" class="w-5 h-5" id="eyeIcon"></i>
+        </button>
+      </div>
+      <div class="text-4xl font-bold text-gray-800" id="balanceDisplay">
+        ₦{{ wallet.balance|floatformat:2 }}
+      </div>
+      <p class="text-sm text-gray-500 mt-1">Available balance</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      <button onclick="handleTransfer()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
+        <i data-feather="send" class="w-5 h-5"></i>
+        <span>Transfer</span>
+      </button>
+      <button onclick="handleFund()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
+        <i data-feather="plus-circle" class="w-5 h-5"></i>
+        <span>Add Funds</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Transaction History -->
+  <div class="bg-white rounded-2xl shadow-xl p-6">
+    <h3 class="text-xl font-semibold text-gray-800 mb-6">Recent Transactions</h3>
+    {% for transaction in transactions %}
+    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+      <div class="flex items-center space-x-4">
+        <div class="w-10 h-10 {% if transaction.type == 'debit' %}bg-red-100{% else %}bg-green-100{% endif %} rounded-full flex items-center justify-center">
+          <i data-feather="{% if transaction.type == 'debit' %}arrow-up-right{% else %}arrow-down-left{% endif %}" class="w-5 h-5 {% if transaction.type == 'debit' %}text-red-600{% else %}text-green-600{% endif %}"></i>
+        </div>
+        <div>
+          <p class="font-medium text-gray-800">{{ transaction.description }}</p>
+          <p class="text-sm text-gray-500">{{ transaction.mode|capfirst }} - {{ transaction.status|capfirst }}</p>
+          <p class="text-xs text-gray-400">{{ transaction.created_at }}</p>
+        </div>
+      </div>
+      <div class="text-right">
+        <p class="font-semibold {% if transaction.type == 'debit' %}text-red-600{% else %}text-green-600{% endif %}">
+          {% if transaction.type == 'debit' %}-{% else %}+{% endif %}₦{{ transaction.amount|floatformat:2 }}
+        </p>
+        <p class="text-xs text-gray-400">{{ transaction.status|capfirst }}</p>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-gray-500 text-sm">No transactions found.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div id="transferModal" class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 hidden">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 space-y-4 relative">
+    <h2 class="text-xl font-bold text-gray-800">Transfer Funds</h2>
+    <form method="POST" action="{% url 'transfer' %}">
+      {% csrf_token %}
+      <div class="space-y-3">
+        <select name="bank" id="bank" required class="w-full border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <option value="" disabled selected>Loading banks...</option>
+        </select>
+        <input type="text" name="sender" id="sender" placeholder="Enter account number" required class="w-full border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <input type="text" name="account_name" id="account_name" readonly placeholder="Account name will appear here" class="w-full bg-gray-100 border px-4 py-2 rounded-lg text-gray-700">
+        <input type="number" step="0.01" name="transfer_amount" id="transfer_amount" placeholder="₦0.00" required class="w-full border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+      </div>
+      <div class="flex justify-end space-x-2 mt-4">
+        <button type="button" onclick="closeTransferModal()" class="text-gray-500 hover:text-gray-700">Cancel</button>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Deposit Modal -->
+<div id="depositModal" class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 hidden">
+  <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 space-y-4 relative">
+    <h2 class="text-xl font-bold text-gray-800">Add Funds</h2>
+    <form id="paymentForm">
+      <div class="space-y-3">
+        <input type="number" id="deposit_amount" name="amount" placeholder="Amount (₦)" required class="w-full border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+        <p id="amountError" class="text-red-500 text-sm hidden">Please enter a valid amount</p>
+      </div>
+      <div class="flex justify-end space-x-2 mt-4">
+        <button type="button" onclick="closeDepositModal()" class="text-gray-500 hover:text-gray-700">Cancel</button>
+        <button type="submit" id="submitBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+          Fund via Paystack
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function handleTransfer() {
+    document.getElementById("transferModal").classList.remove("hidden");
+  }
+  function handleFund() {
+    document.getElementById("depositModal").classList.remove("hidden");
+  }
+  function closeTransferModal() {
+    document.getElementById("transferModal").classList.add("hidden");
+  }
+  function closeDepositModal() {
+    document.getElementById("depositModal").classList.add("hidden");
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    getBanks();
+    const senderInput = document.getElementById('sender');
+    const bankSelect = document.getElementById('bank');
+    if (senderInput && bankSelect) {
+      senderInput.addEventListener('input', tryVerify);
+      bankSelect.addEventListener('change', tryVerify);
+    }
+  });
+
+  function tryVerify() {
+    const bankCode = document.getElementById('bank').value;
+    const accountNumber = document.getElementById('sender').value;
+    if (bankCode && accountNumber.length === 10) {
+      verifyAccount(bankCode, accountNumber);
+    } else {
+      document.getElementById('account_name').value = '';
+    }
+  }
+
+  async function getBanks() {
+    try {
+      const response = await fetch('https://api.paystack.co/bank', {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer {{ paystack_secret_key }}',
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch banks');
+      const data = await response.json();
+      const bankSelect = document.getElementById('bank');
+      bankSelect.innerHTML = '<option value="" disabled selected>Select bank</option>';
+      data.data.forEach(bank => {
+        const option = document.createElement('option');
+        option.value = bank.code;
+        option.textContent = bank.name;
+        bankSelect.appendChild(option);
+      });
+    } catch (error) {
+      console.error('Error fetching banks:', error);
+      alert('Unable to load banks. Please try again later.');
+    }
+  }
+
+  async function verifyAccount(bankCode, accountNumber) {
+    try {
+      const response = await fetch(`/verify-account/?account_number=${accountNumber}&bank_code=${bankCode}`);
+      const data = await response.json();
+      if (data.status && data.data) {
+        document.getElementById('account_name').value = data.data.account_name;
+      } else {
+        document.getElementById('account_name').value = 'Account not found';
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      document.getElementById('account_name').value = 'Verification failed';
+    }
+  }
+
+  feather.replace();
+  const actualBalance = "₦{{ wallet.balance|floatformat:2 }}";
+  let balanceVisible = true;
+  function toggleBalance() {
+    const balanceDisplay = document.getElementById("balanceDisplay");
+    const eyeIcon = document.getElementById("eyeIcon");
+    if (balanceVisible) {
+      balanceDisplay.textContent = "••••••••";
+      eyeIcon.setAttribute("data-feather", "eye-off");
+    } else {
+      balanceDisplay.textContent = actualBalance;
+      eyeIcon.setAttribute("data-feather", "eye");
+    }
+    balanceVisible = !balanceVisible;
+    feather.replace();
+  }
+
+  function copyWalletId() {
+    const walletId = document.getElementById("walletId").textContent;
+    navigator.clipboard.writeText(walletId).then(() => {
+      const button = event.target.closest("button");
+      const icon = button.querySelector("i");
+      icon.setAttribute("data-feather", "check");
+      feather.replace();
+      setTimeout(() => {
+        icon.setAttribute("data-feather", "copy");
+        feather.replace();
+      }, 2000);
+    });
+  }
+
+  // Paystack Deposit Handler
+  document.getElementById('paymentForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const amount = document.getElementById('deposit_amount').value;
+    const submitBtn = document.getElementById('submitBtn');
+    const amountError = document.getElementById('amountError');
+
+    if (!amount || amount <= 0) {
+      amountError.textContent = 'Please enter a valid amount';
+      amountError.style.display = 'block';
+      return;
+    } else {
+      amountError.style.display = 'none';
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
+
+    try {
+      const response = await fetch("/fund-wallet", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ amount: amount })
+      });
+
+      const data = await response.json();
+      if (data.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else {
+        alert('Something went wrong. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Fund via Paystack';
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Network error. Please try again.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Fund via Paystack';
+    }
+  });
+</script>
+</body>
+</html>

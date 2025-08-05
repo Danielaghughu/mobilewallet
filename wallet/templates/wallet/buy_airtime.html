@@ -1,0 +1,27 @@
+{% extends 'wallet/base.html' %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Buy Airtime</h2>
+<form method="post">{% csrf_token %}
+    <label class="block mb-2">Phone Number</label>
+    <input type="text" name="phone" placeholder="e.g. 08012345678" class="border p-2 w-full mb-4" required>
+
+    <label class="block mb-2">Choose Amount</label>
+    <select name="amount" class="border p-2 w-full mb-4" required>
+        <option value="100">₦100</option>
+        <option value="200">₦200</option>
+        <option value="500">₦500</option>
+        <option value="1000">₦1000</option>
+        <option value="2000">₦2000</option>
+    </select>
+
+    <label class="block mb-2">Choose Network</label>
+    <select name="network" class="border p-2 w-full mb-4" required>
+        <option value="MTN">MTN</option>
+        <option value="GLO">GLO</option>
+        <option value="AIRTEL">AIRTEL</option>
+        <option value="9MOBILE">9MOBILE</option>
+    </select>
+
+    <button type="submit" class="bg-indigo-600 text-white px-4 py-2">Buy Airtime</button>
+</form>
+{% endblock %}

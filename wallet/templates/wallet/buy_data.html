@@ -1,0 +1,32 @@
+{% extends 'wallet/base.html' %}
+{% block content %}
+<h2 class="text-xl font-semibold mb-4">Buy Data</h2>
+<form method="post">{% csrf_token %}
+    <label class="block mb-2">Network</label>
+    <select name="network" class="border p-2 w-full mb-4" required>
+        <option value="MTN">MTN</option>
+        <option value="GLO">GLO</option>
+        <option value="AIRTEL">AIRTEL</option>
+        <option value="9MOBILE">9MOBILE</option>
+    </select>
+
+    <label class="block mb-2">Phone Number</label>
+    <input type="text" name="phone" placeholder="e.g. 08012345678" class="border p-2 w-full mb-4" required>
+
+    <label class="block mb-2">Package Category</label>
+    <select name="category" class="border p-2 w-full mb-4" required>
+        <option value="DAILY">DAILY</option>
+        <option value="WEEKLY">WEEKLY</option>
+        <option value="MONTHLY">MONTHLY</option>
+    </select>
+
+    <label class="block mb-2">Data Volume</label>
+    <input type="text" name="volume" placeholder="e.g. 500MB, 1GB, 2.5GB" class="border p-2 w-full mb-4" required>
+
+    <label class="block mb-2">Amount (₦)</label>
+    <input type="number" step="0.01" name="amount" placeholder="Amount" class="border p-2 w-full mb-4" required>
+
+    <button type="submit" class="bg-purple-600 text-white px-4 py-2">Buy Data</button>
+</form>
+{% endblock %}
+
