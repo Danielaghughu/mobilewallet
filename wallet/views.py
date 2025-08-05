@@ -195,7 +195,6 @@ def fund_wallet(request):
 
 
 @csrf_exempt
-@login_required
 def verify_payment(request, reference):
     if request.method == 'POST':
         try:

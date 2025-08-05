@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import env
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -13,7 +13,7 @@ SECRET_KEY = 'django-insecure-@6%@14+#y$-x(fijhrg(rmg%0&@n-c4+dx90+mvd!i(jsfjl8v
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['mobilewallet-uodjo.sevalla.app']
+ALLOWED_HOSTS = ['*', 'mobilewallet-uodjo.sevalla.app']
 
 
 # Application definition
@@ -129,11 +129,11 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Paystack Configuration
-PAYSTACK_PUBLIC_KEY = 'pk_test_c545dab6d5b88785cf6b4749bf4c12c4e784056f'  # Replace with your actual Paystack public key
-PAYSTACK_SECRET_KEY = 'sk_test_9257a4935795f5e347391d8956b339847a0ede4b'  # Replace with your actual Paystack secret key
+PAYSTACK_PUBLIC_KEY = str(env.PAYSTACK_PUBLIC_KEY)  # Replace with your actual Paystack public key
+PAYSTACK_SECRET_KEY = str(env.PAYSTACK_SECRET_KEY)  # Replace with your actual Paystack secret key
 
 # Email Backend Configuration
-EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND ="django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST="smtp.gmail.com"
 EMAIL_PORT=587
 EMAIL_USE_TLS=True

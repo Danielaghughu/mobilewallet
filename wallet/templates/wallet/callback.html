@@ -1,0 +1,44 @@
+<!-- templates/verify.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verifying Payment</title>
+    <script>
+      async function verifyPayment() {
+        const params = new URLSearchParams(window.location.search);
+        const reference = params.get('reference') || params.get('trxref');
+
+        if (!reference) {
+          document.getElementById('status').innerText = 'No reference found in URL.';
+          return;
+        }
+
+        document.getElementById('status').innerText = 'Verifying your payment...';
+
+        try {
+          const response = await fetch(`/verify/${reference}`, {
+            method: 'POST'
+          });
+
+          const data = await response.json();
+          if (data.status === 'success') {
+            document.getElementById('status').innerText = '✅ Payment verified successfully!';
+          } else {
+            document.getElementById('status').innerText = '❌ Payment verification failed.';
+          }
+        } catch (error) {
+          console.error(error);
+          document.getElementById('status').innerText = 'An error occurred while verifying payment.';
+        }
+      }
+
+      window.onload = verifyPayment;
+    </script>
+</head>
+<body>
+    <div style="text-align:center; margin-top:50px;">
+        <h2 id="status">Please wait...</h2>
+    </div>
+</body>
+</html>
