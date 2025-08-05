@@ -28,6 +28,10 @@ INSTALLED_APPS = [
     'wallet',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://mobilewallet-uodjo.sevalla.app",
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
