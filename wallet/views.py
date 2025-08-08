@@ -41,6 +41,8 @@ def signup_view(request):
             messages.error(request, 'Passwords do not match.')
     return render(request, 'wallet/signup.html')
 
+def callback(request):
+    return render(request, 'wallet/callback.html')
 
 @login_required
 def index(request):

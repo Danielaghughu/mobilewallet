@@ -14,6 +14,7 @@ urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.user_logout, name='logout'),
     path('verify-account/', views.verify_account, name='verify_account'),
+    path('callback/', views.callback, name='callback'),
     # path('password-reset/', views.password_reset_request, name='password_reset'),
     # path('password-reset-verify/', views.password_reset_verify, name='password_reset_verify'),
     # path('password-reset-confirm/', views.password_reset_confirm, name='password_reset_confirm'),
